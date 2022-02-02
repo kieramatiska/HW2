@@ -5,8 +5,95 @@ date: "1/31/2022"
 output: html_document
 ---
 
+# Overview:
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# attach packages
+library(tidyverse)
+library(here)
+library(GGally)
+library(AICcmodavg)
+library(broom)
+library(caret)
+library(jtools)
 ```
+
+## Read in Data
+
+```{r}
+palmetto <- read_csv("palmetto.csv")
+```
+
+## Wrangle and Visualize Data {.tabset .tabset-fade}
+
+Create a new data set with the species name in replace of 1 and 2 in species column
+
+```{r}
+palmetto_species <- palmetto %>% 
+  mutate(species = case_when(
+    species == "1" ~ "Serenoa repens",
+    species == "2" ~ "Sabal Etonia"
+  ))
+```
+
+Use `ggpairs` to compare data
+
+```{r}
+palmetto_species %>% 
+  select(species, height:green_lvs) %>% 
+  ggpairs(aes(color = species))
+```
+
+Create a subset with only:
+
+- species
+- height
+- canopy length
+- canopy width
+- green leaves
+
+```{r}
+palmetto_subset <- palmetto_species %>% 
+  select(species, height:green_lvs) %>% 
+  drop_na()
+```
+
+### Plot 1
+
+```{r}
+ggplot(data = palmetto_subset,
+       aes(x = length, y = width)) +
+  geom_col() +
+  facet_wrap(~ species)
+```
+
+### Plot 2
+
+```{r}
+ggplot(data = palmetto_subset,
+       aes(x = height, y = green_lvs)) +
+  geom_col() +
+  facet_wrap(~ species)
+```
+
+### Plot 3
+
+```{r}
+ggplot(data = palmetto_subset,
+       aes(x = height, y = width)) +
+  geom_point(aes(color = species))
+```
+
+
+
+
+
+
+
+
+
 
 
