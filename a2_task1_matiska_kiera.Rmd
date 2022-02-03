@@ -65,18 +65,28 @@ palmetto_subset <- palmetto_species %>%
 
 ```{r}
 ggplot(data = palmetto_subset,
-       aes(x = length, y = width)) +
-  geom_col() +
-  facet_wrap(~ species)
+       aes(x = height)) +
+  geom_histogram(bins = 20, fill = "darkolivegreen4", color = "darkolivegreen") +
+  facet_wrap(~ species) +
+  labs(title = "Number of Individuals of Two Palmetto\nSpecies Within Different Height Classes",
+       x = "Height (cm)",
+       y = "Number of Individuals") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.background = element_rect(fill = "aliceblue"))
 ```
 
 ### Plot 2
 
 ```{r}
 ggplot(data = palmetto_subset,
-       aes(x = height, y = green_lvs)) +
-  geom_col() +
-  facet_wrap(~ species)
+       aes(x = species, y = green_lvs)) +
+  geom_boxplot(color = "black") +
+  labs(title = "Number of Green Leaves \nBetween Two Palmetto Species",
+       x = "Species",
+       y = "Count of Green Leaves") +
+  theme_gray() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.background = element_rect(fill = "aliceblue"))
 ```
 
 ### Plot 3
@@ -84,7 +94,10 @@ ggplot(data = palmetto_subset,
 ```{r}
 ggplot(data = palmetto_subset,
        aes(x = height, y = width)) +
-  geom_point(aes(color = species))
+  geom_point(aes(color = green_lvs)) +
+  facet_wrap(~ species) +
+  labs(title = "Maximum Height vs. Width")
+  
 ```
 
 
