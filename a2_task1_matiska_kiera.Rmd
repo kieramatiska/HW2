@@ -63,19 +63,46 @@ palmetto_subset <- palmetto_species %>%
 
 ### Plot 1
 
+```{r, include = FALSE}
+# wrangle data
+palmetto_sum1 <- palmetto_subset %>% 
+  group_by(species) %>% 
+  summarize(max_height = max(height),
+            min_height = min(height),
+            mean_height = mean(height),
+            sd_height = sd(height),
+            species_count = n())
+```
+
 ```{r}
 ggplot(data = palmetto_subset,
        aes(x = height)) +
   geom_histogram(bins = 20, fill = "darkolivegreen4", color = "darkolivegreen") +
   facet_wrap(~ species) +
-  labs(title = "Number of Individuals of Two Palmetto\nSpecies Within Different Height Classes",
+  labs(title = "Number of Individuals of Each\nPalmetto Species at Different Heights",
        x = "Height (cm)",
        y = "Number of Individuals") +
   theme(plot.title = element_text(hjust = 0.5),
         plot.background = element_rect(fill = "aliceblue"))
 ```
 
+**Figure 1.** Number of Individuals of Each Palmetto Species at Different Heights. The population count of *Sabal etonia* (species 1) and *Serenoa repens* (species 2) is `r palmetto_sum1$species_count[1]` and `r palmetto_sum1$species_count[2]`, respectively. Species 1 has a maximum height at `r palmetto_sum1$max_height[1]` cm, and minimum height at `r palmetto_sum1$min_height[1]` cm, and a mean height at `r palmetto_sum1$mean_height[1]` cm. Species 2 has a maximum height at `r palmetto_sum1$max_height[2]` cm, and minimum height at `r palmetto_sum1$min_height[2]` cm, and a mean height at `r palmetto_sum1$mean_height[2]` cm. For both species 1 and species 2, they have a standard deviation of `r palmetto_sum1$sd_height[1]` and `r palmetto_sum1$sd_height[2]`, respectively.
+
 ### Plot 2
+
+```{r, include = FALSE}
+# wrangle data
+palmetto_sum2 <- palmetto_subset %>% 
+  group_by(species) %>% 
+  summarize(max_leaves = max(green_lvs),
+            min_leaves = min(green_lvs),
+            median_leaves = median(green_lvs),
+            mean_leaves = mean(green_lvs),
+            count = n())
+
+summary(palmetto_sum2)
+
+```
 
 ```{r}
 ggplot(data = palmetto_subset,
@@ -89,18 +116,25 @@ ggplot(data = palmetto_subset,
         plot.background = element_rect(fill = "aliceblue"))
 ```
 
+**Figure 2.** Number of Green Leaves Between Two Palmetto Species. The number of individuals of *Sabal etonia* (species 1) and *Seriona repens* (species 2) is `r palmetto_sum2$count[1]` and `r palmetto_sum2$count[1]`, respectively. Species 1 has four outliers and species 2 has 8 outliers. For species 1, the maximum number of leaves an individual has is `r palmetto_sum2$max_leaves[1]`, the minimum number of leaves an individual has is `r palmetto_sum2$min_leaves[1]`, and the median number of leaves for all of the individuals is `r palmetto_sum2$median_leaves[1]`. This first quantile of species 1 is 3 leaves per individual and the third quantile is 5 leaves per individual. For species 2, the maximum number of leaves an individual has is `r palmetto_sum2$max_leaves[2]`, the minimum number of leaves an individual has is `r palmetto_sum2$min_leaves[2]`, and the median number of leaves for all of the individuals is `r palmetto_sum2$median_leaves[2]`. This first quantile of species 2 is 3 leaves per individual and the third quantile is 9 leaves per individual.
+
 ### Plot 3
 
 ```{r}
 ggplot(data = palmetto_subset,
-       aes(x = height, y = width)) +
-  geom_point(aes(color = green_lvs)) +
+       aes(x = length, y = width)) +
+  geom_point(aes(color = green_lvs),
+             size = 0.3) +
   facet_wrap(~ species) +
-  labs(title = "Maximum Height vs. Width")
-  
+  scale_color_gradient(low = "green", high = "yellow") +
+  labs(title = "Width of Individual Palmetto Species and\ntheir Green Leave Count Based on Length",
+       x = "Length(cm)",
+       y = "Width (cm)") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.background = element_rect(fill = "aliceblue"))
 ```
 
-
+**Figure 3.** Width of Individual Palmetto Species and their Green Leave Count Based on Length. Width is measured in centimeters and is a function of the length of an individual, also in centimeters. Number of green leaves is also graphed based on both length and width, with `r palmetto_sum2$max_leaves[2]` being the maximum number of leaves and `r palmetto_sum2$min_leaves[1]` being the smallest number of leaves on an individual.
 
 
 
