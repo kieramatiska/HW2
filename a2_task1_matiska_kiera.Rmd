@@ -136,6 +136,61 @@ ggplot(data = palmetto_subset,
 
 **Figure 3.** Width of Individual Palmetto Species and their Green Leave Count Based on Length. Width is measured in centimeters and is a function of the length of an individual, also in centimeters. Number of green leaves is also graphed based on both length and width, with `r palmetto_sum2$max_leaves[2]` being the maximum number of leaves and `r palmetto_sum2$min_leaves[1]` being the smallest number of leaves on an individual.
 
+## Conclusion
+
+Based on these graphs, it looks like length, width, and green leaves will be good predictor variables for the determination of which species the palmetto is.
+
+## Binary Linear Regression Model
+
+Create a bnary linear regression model subset
+
+```{r}
+palmetto_blr_subset <- palmetto_subset %>% 
+  mutate(species = fct_drop(species)) %>% 
+  drop_na()
+```
+
+```{r}
+# levels: 1. Sabal etonia, 2. Serenow repens
+
+f1 <- species ~ height + length + width + green_lvs
+f2 <- species ~ height + width + green_lvs
+
+palm_species_blr1 <- glm(formula = f1,
+                         data = palmetto_blr_subset,
+                         family = "binomial")
+palm_species_blr2 <- glm(formula = f2,
+                         data = palmetto_blr_subset,
+                         family = "binomial")
+
+# palm_species_blr1
+# palm_species_blr2
+
+# summary(palm_species_blr1)
+# summary(palm_species_blr2)
+```
+
+Find AIC values
+
+```{r}
+AICc(palm_species_blr1) # 5194.57
+AICc(palm_species_blr2) # 5987.48
+
+aictab(list(palm_species_blr1, palm_species_blr2)) # Delta AIC: 792.91
+```
+
+Based on this currently, model 1 is the best model not only because it has the lowest AIC value, but the p-values all show significance among all the variables, whereas only t of the 3 variables for model 2.
+
+### Model Selection
+
+Use `caret` package to automate cross validation
+
+```{r}
+set.seed(123)
+
+tr_ctrl
+```
+
 
 
 
