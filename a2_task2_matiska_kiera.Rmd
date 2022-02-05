@@ -9,11 +9,42 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(kableExtra)
 ```
 
 ## Read in data
 
 ```{r}
 lizards <- read_csv("lizard.csv")
+```
+
+## Start nonlinear Least Square Model
+
+W = a*SVL^b
+
+- W = weight
+- SVL = snout to vent length
+- a and b are the parameters needed to be fit
+
+### Wrangle data
+
+```{r}
+lizards_log <- lizards %>% 
+  mutate(log_length = log(SV_length)) %>% 
+  mutate(log_weight = log(weight))
+
+lizards_model <- lm(log_weight ~ log_length, data = lizards_log)
+lizards_model
+
+conceptual_model <- function(a, SVL, b) {
+  W = a * SVL ^ b
+  return(w)
+}
+```
+
+### Find variable a
+
+```{r}
+coefficients()
 ```
 
