@@ -19,6 +19,7 @@ library(AICcmodavg)
 library(broom)
 library(caret)
 library(jtools)
+library(kableExtra)
 ```
 
 ## Read in Data
@@ -35,13 +36,13 @@ Create a new data set with the species name in replace of 1 and 2 in species col
 palmetto_species <- palmetto %>% 
   mutate(species = case_when(
     species == "1" ~ "Serenoa repens",
-    species == "2" ~ "Sabal Etonia"
+    species == "2" ~ "Sabal etonia"
   ))
 ```
 
 Use `ggpairs` to compare data
 
-```{r}
+```{r, include = FALSE}
 palmetto_species %>% 
   select(species, height:green_lvs) %>% 
   ggpairs(aes(color = species))
@@ -188,8 +189,65 @@ Use `caret` package to automate cross validation
 ```{r}
 set.seed(123)
 
-tr_ctrl
+tr_ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+
+# train the model
+model1 <- train(f1, data = palmetto_blr_subset,
+                method = "glm", family = "binomial",
+                trControl = tr_ctrl)
+model1
+
+model2 <- train(f2, data = palmetto_blr_subset,
+                method = "glm", family = "binomial",
+                trControl = tr_ctrl)
+
+model2
 ```
+
+```{r}
+final_palmetto_model <- glm(formula = f1, 
+                            data = palmetto_blr_subset,
+                            family = "binomial")
+
+summary_final <- summary(final_palmetto_model)
+
+final_fitted <- final_palmetto_model %>% 
+  broom::augment(type.predict = "response")
+
+final_fitted_odds <- final_fitted %>% 
+  select(species:.fitted) %>% 
+  mutate(.fitted = .fitted * 100) %>% 
+  mutate(suspected_species = case_when(
+    .fitted >= 50 ~ "Seronoa repens",
+    .fitted < 50 ~ "Sabal etonia"
+  ))
+
+model_correct <- final_fitted_odds %>% 
+  if(species == suspected_species) {
+  n() + 1
+} else {
+  n() + 1
+}
+
+final_palm_tidy <- broom::tidy(final_palmetto_model) %>% 
+  mutate(term = case_when(
+    term == "(Intercept)" ~ "Intercept",
+    term == "height" ~ "Height",
+    term == "length" ~ "Length",
+    term == "width" ~ "Width",
+    term == "green_lvs" ~ "Green Leaves"
+  ))
+
+final_palm_tidy %>% 
+  kable(caption = "Table 1: Binary Linear Regression Results for Model 1",
+      col.names = "Coefficient",
+      "Estimate",
+      "Standard Error",
+      "Statistic",
+      "P Value",
+      digits = c(0, 2, 3, 4))
+```
+
 
 
 
