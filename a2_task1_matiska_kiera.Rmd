@@ -248,7 +248,9 @@ final_palm_tidy %>%
       digits = c(0, 2, 3, 4))
 ```
 
+## Conclusion
 
+Model 1 is the best model due to the cross validation results, the AIC results, and the significance of the coefficint values.
 
 
 
