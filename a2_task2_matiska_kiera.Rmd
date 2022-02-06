@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+# attach packages
 library(tidyverse)
 library(kableExtra)
 ```
@@ -15,7 +16,7 @@ library(kableExtra)
 ## Read in data
 
 ```{r}
-lizards <- read_csv("lizard.csv")
+lizards <- read_csv("lizard.csv") # read in csv
 ```
 
 ## Start nonlinear Least Square Model
@@ -29,22 +30,33 @@ W = a*SVL^b
 ### Wrangle data
 
 ```{r}
+# add some log columns of the data: length and width
 lizards_log <- lizards %>% 
   mutate(log_length = log(SV_length)) %>% 
-  mutate(log_weight = log(weight))
+  mutate(log_weight = log(weight)) %>% 
+  drop_na() # drop na values
 
-lizards_model <- lm(log_weight ~ log_length, data = lizards_log)
-lizards_model
+lizards_model_guess <- lm(log_weight ~ log_length, data = lizards_log) # create a guess model using log values
 
-conceptual_model <- function(a, SVL, b) {
-  W = a * SVL ^ b
-  return(w)
+conceptual_model <- function(a, SV_length, b) { # define the conceptual model
+  W = a * SV_length ^ b
+  return(W)
 }
+
+new_model <- function (a, SV_length, b) { # define the linear equation model
+  ln(W) = ln(a) + b * ln(SV_length)
+  print(W)
+}
+
+guess_coef <- coef(lizards_model_guess) # find the coefficients
 ```
 
-### Find variable a
+### Write NLS model
 
 ```{r}
-coefficients()
+nls_lizards <- nls(weight ~ conceptual_model(a, SV_length, b),
+                   data = lizards,
+                   start = list(a = 2.718^(guess_coef[1]/guess_coef[2]),
+                                b = guess_vec[2], trace = TRUE))
 ```
 
