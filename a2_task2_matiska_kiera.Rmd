@@ -37,6 +37,7 @@ lizards_log <- lizards %>%
   drop_na() # drop na values
 
 lizards_model_guess <- lm(log_weight ~ log_length, data = lizards_log) # create a guess model using log values
+lizards_model_guess
 
 conceptual_model <- function(a, SV_length, b) { # define the conceptual model
   W = a * SV_length ^ b
@@ -44,11 +45,12 @@ conceptual_model <- function(a, SV_length, b) { # define the conceptual model
 }
 
 new_model <- function (a, SV_length, b) { # define the linear equation model
-  ln(W) = ln(a) + b * ln(SV_length)
+  ln(W) = b * ln(a) + b * ln(SV_length)
   print(W)
 }
 
-guess_coef <- coef(lizards_model_guess) # find the coefficients
+guess_coef <- coefficients(lizards_model_guess) # find the coefficients
+guess_coef
 ```
 
 ### Write NLS model
@@ -57,6 +59,7 @@ guess_coef <- coef(lizards_model_guess) # find the coefficients
 nls_lizards <- nls(weight ~ conceptual_model(a, SV_length, b),
                    data = lizards,
                    start = list(a = 2.718^(guess_coef[1]/guess_coef[2]),
-                                b = guess_vec[2], trace = TRUE))
+                                b = guess_coef[2]),
+                   trace = TRUE)
 ```
 
