@@ -2,7 +2,9 @@
 title: "Untitled"
 author: "Kiera Matiska"
 date: "2/5/2022"
-output: html_document
+output:
+  html_document:
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -11,12 +13,17 @@ knitr::opts_chunk$set(echo = TRUE)
 # attach packages
 library(tidyverse)
 library(kableExtra)
+library(equatiomatic)
 ```
 
 ## Read in data
 
 ```{r}
-lizards <- read_csv("lizard.csv") # read in csv
+lizards <- read_csv("lizard.csv") %>% # read in csv
+  mutate(sex = case_when(
+    sex == "M" ~ "male",
+    sex == "F" ~ "female"
+  ))
 ```
 
 ## Start nonlinear Least Square Model
@@ -61,5 +68,29 @@ nls_lizards <- nls(weight ~ conceptual_model(a, SV_length, b),
                    start = list(a = 2.718^(guess_coef[1]/guess_coef[2]),
                                 b = guess_coef[2]),
                    trace = TRUE)
+nls_lizards
+```
+
+### Model Visualization
+
+```{r}
+ggplot(data = lizards,
+       aes(x = SV_length, y = weight)) +
+  geom_point(aes(color = sex),
+             size = 0.7,
+             curve(nls_lizards, a = 2.718^(guess_coef[1]/guess_coef[2]),
+                   b = guess_coef[2])) +
+  labs(title = "Nonlinear Least Squares Model Comparing Lizard\nSnout to Vent Length to Weight by Sex",
+        x = "Snout to Vent Length (mm)",
+        y = "Weight (g)") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.background = element_rect(fill = "aliceblue"))
+```
+
+### Model Western Whiptail Lizard
+
+```{r}
+# CNTI is Western Whiptail
+lizards_
 ```
 

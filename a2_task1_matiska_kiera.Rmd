@@ -1,17 +1,18 @@
 ---
-title: "Untitled"
+title: "Binary Linear Regression Analysis of Two Palmetto Models"
 author: "Kiera Matiska"
 date: "1/31/2022"
 output: 
   html_document:
-  code_folding: hide
+    code_folding: hide
 ---
 
 # Overview:
 
+In this code, two models will be analyzed using binary linear regression to decide which of the two models is the best one for determining two different palmetto species: *Serenoa repens* and *Sabal etonia*. Before running the models, three graphs will be generated to determine which variables seem significant for the models. The variables that will be used withing the two models are length in centimeters, height in centimeters, width in centimeters, and number of green leaves each individual has. In the end, a final model will be chosen and will be analyzed to determine the likelihood of it choosing the correct species based on its variables and coefficients.
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=TRUE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 # attach packages
 library(tidyverse)
@@ -22,17 +23,14 @@ library(broom)
 library(caret)
 library(jtools)
 library(kableExtra)
+library(equatiomatic)
 ```
-
-## Read in Data
 
 ```{r}
 palmetto <- read_csv("palmetto.csv") # read in data
 ```
 
-## Wrangle and Visualize Data {.tabset .tabset-fade}
-
-Create a new data set with the species name in replace of 1 and 2 in species column
+## Data Visualizations {.tabset .tabset-fade}
 
 ```{r}
 palmetto_species <- palmetto %>% # define subset
@@ -40,28 +38,16 @@ palmetto_species <- palmetto %>% # define subset
     species == "1" ~ "Serenoa repens",
     species == "2" ~ "Sabal etonia"
   ))
-```
 
-Use `ggpairs` to compare data
+palmetto_subset <- palmetto_species %>% # define new subset
+  select(species, height:green_lvs) %>% # only keep these columns
+  drop_na() # drop na values
+```
 
 ```{r, include = FALSE}
 palmetto_species %>% 
   select(species, height:green_lvs) %>% 
   ggpairs(aes(color = species)) # compare variables
-```
-
-Create a subset with only:
-
-- species
-- height
-- canopy length
-- canopy width
-- green leaves
-
-```{r}
-palmetto_subset <- palmetto_species %>% # define new subset
-  select(species, height:green_lvs) %>% # only keep these columns
-  drop_na() # drop na values
 ```
 
 ### Plot 1
@@ -75,9 +61,7 @@ palmetto_sum1 <- palmetto_subset %>%
             mean_height = mean(height), # calculate mean height
             sd_height = sd(height), # calculate the dtandard deviation
             species_count = n()) # count the number of individuals of each species
-```
 
-```{r}
 # histogram on height and number of individuals
 ggplot(data = palmetto_subset, # define ggplot
        aes(x = height)) + 
@@ -89,6 +73,7 @@ ggplot(data = palmetto_subset, # define ggplot
   theme(plot.title = element_text(hjust = 0.5), # center title
         plot.background = element_rect(fill = "aliceblue")) # change background color
 ```
+
 
 **Figure 1.** Number of Individuals of Each Palmetto Species at Different Heights. The population count of *Sabal etonia* (species 1) and *Serenoa repens* (species 2) is `r palmetto_sum1$species_count[1]` and `r palmetto_sum1$species_count[2]`, respectively. Species 1 has a maximum height at `r palmetto_sum1$max_height[1]` cm, and minimum height at `r palmetto_sum1$min_height[1]` cm, and a mean height at `r palmetto_sum1$mean_height[1]` cm. Species 2 has a maximum height at `r palmetto_sum1$max_height[2]` cm, and minimum height at `r palmetto_sum1$min_height[2]` cm, and a mean height at `r palmetto_sum1$mean_height[2]` cm. For both species 1 and species 2, they have a standard deviation of `r palmetto_sum1$sd_height[1]` and `r palmetto_sum1$sd_height[2]`, respectively.
 
@@ -103,9 +88,7 @@ palmetto_sum2 <- palmetto_subset %>% # define new subset
             median_leaves = median(green_lvs), # calculate median number of leaves
             mean_leaves = mean(green_lvs), # calculate mean number of leaves
             count = n()) # count species
-```
 
-```{r}
 # create a box plot showing green leave count differences by species
 ggplot(data = palmetto_subset, # define ggplot
        aes(x = species, y = green_lvs)) +
@@ -145,15 +128,11 @@ Based on these graphs, it looks like length, width, and green leaves will be goo
 
 ## Binary Linear Regression Model
 
-Create a binary linear regression model subset
-
 ```{r}
 palmetto_blr_subset <- palmetto_subset %>% # create a blr subset
   mutate(species = fct_drop(species)) %>% # create a factor of species
   drop_na() # drop na values
-```
 
-```{r}
 # levels: 1. Sabal etonia, 2. Serenow repens
 
 f1 <- species ~ height + length + width + green_lvs # formula 1
@@ -173,24 +152,17 @@ palm_species_blr2 <- glm(formula = f2,
 
 # summary(palm_species_blr1)
 # summary(palm_species_blr2)
-```
 
-Find AIC values
 
-```{r}
-AICc(palm_species_blr1) # 5194.57
-AICc(palm_species_blr2) # 5987.48
 
-aictab(list(palm_species_blr1, palm_species_blr2)) # Delta AIC: 792.91
-```
+# AICc(palm_species_blr1) # 5194.57
+# AICc(palm_species_blr2) # 5987.48
 
-Currently, model 1 is the best model not only because it has the lowest AIC value, but the p-values all show significance among each variable. Model 2 has an AIC value that is almost 800 above model 1 and the only two of the three variables show significance.
+# aictab(list(palm_species_blr1, palm_species_blr2)) # Delta AIC: 792.91
 
-### Model Selection
 
-Use `caret` package to automate cross validation
 
-```{r}
+
 set.seed(123) # so we don't get random numbers each time we run it
 
 tr_ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10) # set train control model
@@ -199,16 +171,17 @@ tr_ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10) # set 
 model1 <- train(f1, data = palmetto_blr_subset, # train model 1
                 method = "glm", family = "binomial",
                 trControl = tr_ctrl)
-model1 # return model 1
+# model1 # return model 1
 
 model2 <- train(f2, data = palmetto_blr_subset, # train model 2
                 method = "glm", family = "binomial",
                 trControl = tr_ctrl)
 
-model2 # return model 2
-```
+# model2 # return model 2
 
-```{r}
+
+
+
 # final model: model 1; run glm
 final_palmetto_model <- glm(formula = f1, 
                             data = palmetto_blr_subset,
@@ -230,9 +203,10 @@ final_fitted_odds <- final_fitted %>% # define new subset
     fitted >= 50 ~ "Serenoa repens",
     fitted < 50 ~ "Sabal etonia"
   ))
-```
 
-```{r}
+
+
+
 model_correct <- final_fitted_odds %>% # define new subset
   mutate(species_correct = case_when( # determine whether the model calculated the right or wrong species
     species == "Serenoa repens" & suspected_species == "Serenoa repens" ~ 1,
@@ -246,56 +220,74 @@ model_sum <- model_correct %>%
   group_by(species_correct) %>% 
   summarize(count = n())
 
+# rename and calculate some variable observations
 model_sum_sub <- model_sum %>% 
-  mutate(species_correct = case_when(
+  mutate(species_correct = case_when( # rename observations
     species_correct == "1" ~ "Serenoa repens True",
     species_correct == "0" ~ "Serenoa repens False",
     species_correct == "4" ~ "Sabal etonia True",
     species_correct == "3" ~ "Sabal etonia False"
   )) %>% 
-  mutate(species_percent = case_when(
+  mutate(species_percent = case_when( # calculate observations
     count == "564" ~ round(count[1]/(count[1] + count[2]) * 100, 2),
     count == "5548" ~ round(count[2]/(count[1] + count[2]) * 100, 2),
     count == "454" ~ round(count[3]/(count[3] + count[4]) * 100, 2),
     count == "5701" ~ round(count[4]/(count[3] + count[4]) * 100, 2)
   ))
+```
 
+**Table 1.** Percent of Species Observations Guessed Correctly and Incorrectly by the Model
+
+```{r}
+# create a table with the data collected above
 model_sum_sub %>% 
-  kbl(caption = "Percentages of the Amount of Correct and Incorrect Guesses Made by the Model.",
-      col.names = "Species Status",
-      "Count",
-      "Percentage (%)") %>% 
-  kable_styling()
+  kbl(col.names = c("Species", # change column header names
+                    "Count", 
+                    "Percentage (%)")) %>% 
+  kable_styling(position = "center", full_width = TRUE) # style the table
 ```
 
 ```{r}
+# create a tidy version of the final model coefficient data
 final_palm_tidy <- broom::tidy(final_palmetto_model) %>% 
-  mutate(term = case_when(
+  mutate(term = case_when( # rename the term intercepts
     term == "(Intercept)" ~ "Intercept",
     term == "height" ~ "Height",
     term == "length" ~ "Length",
     term == "width" ~ "Width",
     term == "green_lvs" ~ "Green Leaves"
-  ))
+  )) %>% 
+  mutate(p.value = if(p.value < 0.001) { # if any p value is below 0.001, replace it with 0.001
+      paste("<0.001")
+  }
+    else{
+      paste(p.value)
+    }
+  )
+```
 
+**Table 2.** Coefficient Estimates and Statistical Values for Each Coefficient
+
+```{r}
+# create a table of the tidy data set above
 final_palm_tidy %>% 
-  kable(caption = "Table 1: Binary Linear Regression Results for Model 1",
-      col.names = "Coefficient",
-      "Estimate",
-      "Standard Error",
-      "Statistic",
-      "P Value",
-      digits = c(0, 2, 3, 4))
+  kbl(col.names = c("Variable", # change column names
+                    "Coefficient", 
+                    "Standard Error", 
+                    "Statistic", 
+                    "P Value"),
+      digits = c(0, 2, 3, 2, 3)) %>% # changes number of digits seen in each column
+  kable_styling(position = "center", full_width = TRUE) # style the table
 ```
 
 ## Conclusion
 
-Model 1 is the best model due to the cross validation results, the AIC results, and the significance of the coefficint values.
+Based on the statistical analysis above, model 1 is the best model because it has the lowest AIC value (5194.57) and the p-values all show significance among each variable. Model 2 has an AIC value that is almost 800 above model 1 and only two of the three variables show significance. These two things on top of the binary linear regression test indicates that model 1 is the best model. This is the equation:
 
+`r extract_eq(final_palmetto_model, wrap = TRUE, use_coefs = TRUE)`
 
+Overall, the model appears to be around 91% effective, which is excellent for determining a species based on these variables.
 
+#### Data Citation
 
-
-
-
-
+Abrahamson, W.G. 2019. Survival, growth and biomass estimates of two dominant palmetto species of south-central Florida from 1981 - 2017, ongoing at 5-year intervals ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/f2f96ec76fbbd4b9db431c79a770c4d5
