@@ -52,7 +52,7 @@ palmetto_species %>%
 
 ### Plot 1
 
-```{r, include = FALSE}
+```{r}
 # wrangle data
 palmetto_sum1 <- palmetto_subset %>% 
   group_by(species) %>% 
@@ -79,7 +79,7 @@ ggplot(data = palmetto_subset, # define ggplot
 
 ### Plot 2
 
-```{r, include = FALSE}
+```{r}
 # wrangle data for plot 2
 palmetto_sum2 <- palmetto_subset %>% # define new subset
   group_by(species) %>% 
@@ -223,10 +223,10 @@ model_sum <- model_correct %>%
 # rename and calculate some variable observations
 model_sum_sub <- model_sum %>% 
   mutate(species_correct = case_when( # rename observations
-    species_correct == "1" ~ "Serenoa repens True",
-    species_correct == "0" ~ "Serenoa repens False",
-    species_correct == "4" ~ "Sabal etonia True",
-    species_correct == "3" ~ "Sabal etonia False"
+    species_correct == "1" ~ "Serenoa repens Correct",
+    species_correct == "0" ~ "Serenoa repens Incorrect",
+    species_correct == "4" ~ "Sabal etonia Correct",
+    species_correct == "3" ~ "Sabal etonia Incorrect"
   )) %>% 
   mutate(species_percent = case_when( # calculate observations
     count == "564" ~ round(count[1]/(count[1] + count[2]) * 100, 2),
