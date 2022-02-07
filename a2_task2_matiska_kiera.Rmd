@@ -7,6 +7,10 @@ output:
     code_folding: hide
 ---
 
+## Overview:
+
+This code runs 2 Non-Linear Least Squares Regression analysis on a model considering that weight of a species is a function of its snout to vent length. The first regression is run on the whole data set with all the species of lizards includes, whereas the second regression looks only at male Western Whiptail Lizards. Then, both models will be compared to the later regression and plotted on a graph.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -14,13 +18,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(kableExtra)
 library(equatiomatic)
+library(purrr)
 ```
 
 ## Read in data
 
 ```{r}
 lizards <- read_csv("lizard.csv") %>% # read in csv
-  mutate(sex = case_when(
+  mutate(sex = case_when( # expand sex variable names
     sex == "M" ~ "male",
     sex == "F" ~ "female"
   ))
@@ -34,7 +39,7 @@ W = a*SVL^b
 - SVL = snout to vent length
 - a and b are the parameters needed to be fit
 
-### Wrangle data
+### Run aa Non-linear Least Squares Regression
 
 ```{r}
 # add some log columns of the data: length and width
@@ -44,7 +49,6 @@ lizards_log <- lizards %>%
   drop_na() # drop na values
 
 lizards_model_guess <- lm(log_weight ~ log_length, data = lizards_log) # create a guess model using log values
-lizards_model_guess
 
 conceptual_model <- function(a, SV_length, b) { # define the conceptual model
   W = a * SV_length ^ b
@@ -57,40 +61,74 @@ new_model <- function (a, SV_length, b) { # define the linear equation model
 }
 
 guess_coef <- coefficients(lizards_model_guess) # find the coefficients
-guess_coef
+
+
+# run a nls test
+nls_lizards <- nls(weight ~ conceptual_model(a, SV_length, b),
+                   data = lizards, # use this data
+                   start = list(a = 2.718^(guess_coef[1]/guess_coef[2]), # calculate coefficient a
+                                b = guess_coef[2]), # coefficient b already calculated
+                   trace = TRUE)
 ```
 
-### Write NLS model
+### Find RMSE
 
 ```{r}
-nls_lizards <- nls(weight ~ conceptual_model(a, SV_length, b),
-                   data = lizards,
-                   start = list(a = 2.718^(guess_coef[1]/guess_coef[2]),
-                                b = guess_coef[2]),
-                   trace = TRUE)
-nls_lizards
+
 ```
 
 ### Model Visualization
 
 ```{r}
-ggplot(data = lizards,
-       aes(x = SV_length, y = weight)) +
-  geom_point(aes(color = sex),
-             size = 0.7,
-             curve(nls_lizards, a = 2.718^(guess_coef[1]/guess_coef[2]),
-                   b = guess_coef[2])) +
-  labs(title = "Nonlinear Least Squares Model Comparing Lizard\nSnout to Vent Length to Weight by Sex",
-        x = "Snout to Vent Length (mm)",
-        y = "Weight (g)") +
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.background = element_rect(fill = "aliceblue"))
+# create a scatter plot of the data
+ggplot(data = lizards,# define data
+       aes(x = SV_length, y = weight)) + 
+  geom_point(aes(color = sex), # define scatter plot and color points by sex
+             size = 0.7) + # change point size
+  labs(title = "Nonlinear Least Squares Model Comparing Lizard\nSnout to Vent Length to Weight by Sex", #add title
+        x = "Snout to Vent Length (mm)", # add x-axis label
+        y = "Weight (g)") + # add y-axis label
+  theme(plot.title = element_text(hjust = 0.5), # center title
+        plot.background = element_rect(fill = "aliceblue")) # change plot background color
 ```
 
 ### Model Western Whiptail Lizard
 
 ```{r}
 # CNTI is Western Whiptail
-lizards_
+# create a CNTI subset
+lizards_cnti <- lizards_log %>% 
+  filter(spp == "CNTI", sex == "male") %>% # filter for the species and male
+  mutate(spp = case_when( # change CNTI to the common name of lizard
+    spp == "CNTI" ~ "Western Whiptail"
+  ))
+
+lizards_model_guess1 <- lm(log_weight ~ log_length, data = lizards_cnti) # create a guess model using log values
+
+conceptual_model <- function(a, SV_length, b) { # define the conceptual model
+  W = a * SV_length ^ b
+  return(W)
+}
+
+new_model <- function (a, SV_length, b) { # define the linear equation model
+  ln(W) = b * ln(a) + b * ln(SV_length)
+  print(W)
+}
+
+guess_coef <- coefficients(lizards_model_guess) # find the coefficients
+
+# run a nls 
+nls_cnti <- nls(weight ~ conceptual_model(a, SV_length, b),
+                   data = lizards_cnti, # use this data
+                   start = list(a = 2.718^(guess_coef[1]/guess_coef[2]), # calculate coefficient a
+                                b = guess_coef[2]), # coefficient b already calculated
+                   trace = TRUE)
 ```
 
+### Data Visualization
+
+```{r}
+plot()
+```
+
+Coefficient a is smaller in general model and larger in the species specific model. Vice Versa for coefficient b. Risidual sum of squares for general is 15467 and 807.7 for the other. General took 7 iterations and species specific took 8.
