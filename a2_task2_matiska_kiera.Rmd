@@ -57,7 +57,7 @@ conceptual_model <- function(a, SV_length, b) { # define the conceptual model
 
 new_model <- function (a, SV_length, b) { # define the linear equation model
   ln(W) = b * ln(a) + b * ln(SV_length)
-  print(W)
+  return(W)
 }
 
 guess_coef <- coefficients(lizards_model_guess) # find the coefficients
@@ -69,12 +69,8 @@ nls_lizards <- nls(weight ~ conceptual_model(a, SV_length, b),
                    start = list(a = 2.718^(guess_coef[1]/guess_coef[2]), # calculate coefficient a
                                 b = guess_coef[2]), # coefficient b already calculated
                    trace = TRUE)
-```
 
-### Find RMSE
-
-```{r}
-
+summary(nls_lizards)
 ```
 
 ### Model Visualization
@@ -115,7 +111,8 @@ new_model <- function (a, SV_length, b) { # define the linear equation model
   print(W)
 }
 
-guess_coef <- coefficients(lizards_model_guess) # find the coefficients
+guess_coef1 <- coefficients(lizards_model_guess) # find the coefficients
+guess_coef1
 
 # run a nls 
 nls_cnti <- nls(weight ~ conceptual_model(a, SV_length, b),
@@ -130,7 +127,7 @@ nls_cnti <- nls(weight ~ conceptual_model(a, SV_length, b),
 ```{r}
 ggplot(data = lizards_cnti,
        aes(x = SV_length, y = weight)) +
-  geom_point() +
+  geom_point(color = "darkolivegreen4") +
   labs(title = "Western Whiptail Lizard Snout to Vent Length vs. Weight",
        x = "Snout to Vent Length (mm)",
        y = "Weight (g)") +
@@ -138,11 +135,15 @@ ggplot(data = lizards_cnti,
         plot.background = element_rect(fill = "aliceblue"))
 ```
 
-
-### Find RMSE
+### Find RMSE for both models
 
 ```{r}
-
+RMSE_sum_df <- data.frame(matrix(c("1",
+                                    rmse(lizard$weight, predict(nls_df)),
+                                    "2",
+                                    rmse(lizards_cnti$weight, predict(nls_df2))),
+                                    2,2,byrow=T)) %>%
+  set_colnames(c("model","rmse"))
 ```
 
 Coefficient a is smaller in general model and larger in the species specific model. Vice Versa for coefficient b. Risidual sum of squares for general is 15467 and 807.7 for the other. General took 7 iterations and species specific took 8.
