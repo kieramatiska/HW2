@@ -128,7 +128,21 @@ nls_cnti <- nls(weight ~ conceptual_model(a, SV_length, b),
 ### Data Visualization
 
 ```{r}
-plot()
+ggplot(data = lizards_cnti,
+       aes(x = SV_length, y = weight)) +
+  geom_point() +
+  labs(title = "Western Whiptail Lizard Snout to Vent Length vs. Weight",
+       x = "Snout to Vent Length (mm)",
+       y = "Weight (g)") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.background = element_rect(fill = "aliceblue"))
+```
+
+
+### Find RMSE
+
+```{r}
+
 ```
 
 Coefficient a is smaller in general model and larger in the species specific model. Vice Versa for coefficient b. Risidual sum of squares for general is 15467 and 807.7 for the other. General took 7 iterations and species specific took 8.
